@@ -1,0 +1,124 @@
+---
+title: "Intro to R: Classes 7 and 8"
+author: "Dr Mark Grabowski"
+output: html_document
+---
+
+---
+
+### Goodness of Fit
+Goodness of fit tests are designed to use with categorical data, and here we will use them to test
+if actual results differ from some predicted distribution.
+
+#### Pearson’s Chi-Square Test for Nominal Data.
+Let’s say we have a hypothetical example where we find 100 monkey skulls in a field in Michigan.  We know what the species designation is for each of these skulls, and we find 26 Macaca fascicularis, 17 Macaca nemestrina, 34 Macaca mulatta, and 23 Macaca sinica. You know that the current distribution of monkeys of these four species in Michigan is 25% each. What is the probability that the distribution of Monkey skulls, giving you an idea of the species composition in the past, matches that of the present?  
+
+First lets enter the data
+```{r}
+test<-c(26,17,34,23)
+null.probs <- c(.25,.25,.25,.25)
+test2<-chisq.test(test,p=null.probs)
+```
+
+```{r}
+test2
+
+```
+So, given that the null hypothesis of present composition = past composition is true, there is a 0.116 probability of finding the data. Therefore with an alpha of 0.05 we do not reject the null hypotheses.  
+Pretty simple, no?
+
+#### Kolmogorov-Smirnov Goodness of Fit Test.
+Whereas the chi-square test is for nominal- scale data (categorical), there are also goodness of fit tests for data measured on other scales. The KS test works for continuous, ordered, and continuous but grouped data. We talked about it briefly in classes 3&4 when working with the Iris data set. The KS test is a non-parametric test that compares two sample distributions or one sample to a reference distribution, and is sensitive to both location and shape of probability distribution.  
+
+The KS test: are the sample distributions significantly different from each other?
+Lets say we have 5 categories of different groups - they are groups for the heights of moths on tree trunks. The expected frequencies for each category is 3, and the observed frequencies are 5,5,5,1,1.
+```{r}
+y<-c(3,3,3,3,3)
+x<-c(5,5,5,1,1)
+ks.test(x,y)
+```
+### PCA
+PCA is a way of exploring your data, looking for relationships in variables, but is not a hypothesis test. It is not the end result of an analysis but can be used as one of the initial exploratory steps. A PCA takes a number of variables (height, weight, length, etc.) and finds combinations of these variables that produce indices that are uncorrelated and describe the variation in the data. It is a way of reducing the total number of variables to a few, in other words, to go from many dimensions of variation to as few as can be used to adequately describe the data. Let’s read back in the Iris data we started the class with first and then do a PCA analysis on this. The default is to do a PCA on the covariance matrix of variables. If the argument cor = T is used instead you use the correlation matrix. The choice between the two depends on whether you want to scale your data at this point. If you have data of varying types and scales, using the correlation matrix makes sense. We will use the covariance matrix here as all the data is of one type.
+```{r}
+#First load the iris dataset
+iris.data<-read.csv("/Users/markgrabowski/Documents/Academic/Classes Taught/LJMU Classes/2021/Spring/7107NATSCI - R Classes/Online R Classes/Classes 3 and 4/Data/Iris_Data_Set.csv",header=T)
+
+iris.pc<-princomp(iris.data[,2:5], cor=F)
+iris.pc
+summary(iris.pc) 
+names(iris.pc)
+```
+So, looking at the output for the summary command above we can see that the first PC summarizes 92% of the variance in the data, followed by 5%. Then there is a drop off, so it looks like we would only be interested in PC1 and PC2 for this analysis. Lets make a scree plot of the PCs to look at this drop off visually.
+```{r}
+screeplot(iris.pc,type="lines")
+```
+What the scree plot is telling us is most of the variance in the data is described be PC1 and PC2 - therefore PC3 and PC4 could probably be dropped from the analysis.  
+Let’s look at the loadings next. The loadings are the correlation coefficients between the original variables (traits) and the new PC axes.
+
+```{r}
+iris.pc$loadings
+```
+Lets look at the PC scores for the first 6 individuals. The head function is used to look at the first few lines of a data set, in this case the 150 different flower scores. Remember, pc scores are the original data (in this case values for the 4 measurements) weighted by the loadings of each measurement on each PC. In other words, what we are looking at is the locations of the observations with respect to the new PC axis.
+```{r}
+head(iris.pc$scores)
+biplot(iris.pc)
+```
+---
+Here we are looking at the biplot for our PCA. A biplot pc shows the scores for each individual flower on the first two principle components (numbers refer to row numbers for individual IDs), and the loadings of each variable on the PC (the named arrows). What we can see is that the lower numbered flowers (likely one species) separate along PC1 from the others - PC1 is usually shape and size for morphology so this is showing a difference in overall size between this species and the others. The loadings (arrows) are showing graphically what the first PC results were showing - the first PC is dominated by PL, with PW and SL contributing a smaller amount to this PC in the same direction. SW and SL are loading strongly on PC2 unlike the other two variables.  
+
+Lets plot the scores so the different species are shown with colors, and identify a few outlying points:
+```{r}
+iris.scores<-iris.pc$scores
+iris.scores<-data.frame(iris.data$Species,iris.scores)
+plot(iris.scores[iris.scores[,1]=="I. set",2:3],xlim=c(-3,4),col=1)
+points(iris.scores[iris.scores[,1]=="I. v",2:3],xlim=c(-3,4),col=2) >
+points(iris.scores[iris.scores[,1]=="I.vg",2:3],xlim=c(-3,4),col=3)
+```
+
+#identify(iris.scores[2:3],xlim=c(-3,4),col=1)  
+
+Turning back to the pc score plot above, see individual 132 at the bottom of the score plot? Let’s get the means and the range of each variable and then compare them to that flower.
+```{r}
+colMeans(iris.data[,2:5])
+apply(iris.data[,2:5],2,range)
+iris.data[132,]
+```
+What we see is that 132 has a very long SL, and SW, and long PL, and a long PW. Looking at the loadings we see that with a long SW, long SL the flower will have a high negative PC2 score and with a really really long PL and a long PW it would have a high PC1 score. And that is what we see looking at the plot of the scores above. In general, scores to the right of the plot are dominated by loadings on the right, etc.  
+
+Lets look at individual 16 from the scores plot.
+```{r}
+iris.data[16,]
+```
+
+What we see is that this individual has a long SL, really long SW, short PL and short PW.   Therefore we expect a large negative PC2 and negative value on PC1, which is what we see.  
+We can also see the relationship between samples and variables on the scores and loadings plots. On the scores plot (colored dots) we can see each of the species groups together along PC1 - this is usually size and size related shape changes, while PC2 and the other PCs are shape differences. What we can see is that if size is removed, each species has roughly a similar spread of scores along PC2.  
+The loadings plot shows us the relationship between the variables and the relationship between the variables and the PCs. We can look at how the loadings correspond to the correlations between the variables shown below.
+```{r}
+cor(iris.data[,2:5])
+```
+Looking at the loadings plot, we see that variables on different sides of the origin (0 for PC1, 0 for PC2) are negatively correlated - e.g. SW and SL. We can also see that PL and PW, which are in a similar direction on the loadings plot are highly correlated here. The length of the arrows gives you the the magnitude of the correlation between the variable and the PC axis, or how much each variable is contributing to each PC.  
+
+###3. Factor Analysis
+Factor analysis takes a set of data and attempts to describe the variation in that data set in terms of a smaller number of variables based on the idea that some of the variables are correlated with each other. FA differs from PCA in that it is based on a statistical model, while PCA is simply descriptive. In addition, PCA is more concerned with explaining variability in the variables while FA is more concerned with explaining covariance or correlation structure among the variables.  
+
+First lets load in a new data set which has student responses to a survey about how much they enjoy various class topics (1-dislike to 5-like).
+```{r}
+fa.data <- read.csv("/Users/markgrabowski/Documents/Academic/Classes Taught/LJMU Classes/2021/Spring/7107NATSCI - R Classes/Online R Classes/Classes 7 and 8/Data/dataset_exploratoryFactorAnalysis.csv",header=T)
+head(fa.data)
+```
+Let’s try to figure out how many factors there are before hand using a PCA
+```{r}
+summary(princomp(fa.data))
+```
+We can see that at about PC3 there is a drop off in the amount of variation explained, and a big one at 4. But with only 6 variables, we can only have 3 factors at most so lets start with 2.
+```{r}
+factanal(fa.data,factors=2)
+```
+Looking at these results we see that first, with a p-value of 0.568 we cannot reject the hypotheses that 2 factors is enough to adequately describe our data, which is good.  
+
+---
+
+Looking at the loadings on the factors, BIO, GEO and CHEM load highly on this factor, which we could guess could be labeled ”Science.” The next factor is mostly ALG and CALC and could be called ”Math.” STAT lads on this factor as well, and a little on factor 1, suggesting people who like STATS like math and science somewhat. The Var columns show how much of the variation in class preference each factor explained and together they explain 66.5% of the variance in class preference. Finally, uniqueness is how much of the variance is unique to that variable.
+
+---
+

@@ -1,0 +1,133 @@
+---
+title: "Intro to R: Class 5"
+author: "Dr Mark Grabowski"
+output: html_document
+---
+
+---
+
+### 1. Line fitting and plotting data
+#### Simple Linear Regression.
+We touched on regression before when we were adding a regression line to the plot. Regression describes the statistical relationship between two variables. In other words, does one variable vary with the other in a systematic fashion. Regression assumes that one of the variables is dependent (the dependent variable) on the the other (the independent variable). Regression assumes that the residuals (difference between individual measurements and the fitted values) are normally distributed, not that the data is normally distributed.  
+
+The simplest format is the lm() function with the model y x, or y regressed on x. In this case y is the dependent variable and x is the independent. The default is a least squares regression
+But first, if we want to see whether a particular linear function is appropriate for the data we use residual analyses.  
+Residuals are the difference between the y values and the linear regression line ei = Yi − Yˆi. What we want to do is plot the residuals against either the predictor variable or the fitted values and look for patterns. The kinds of things they can tell us are below (taken from my Regression Analysis CPSC 541 course).  
+
+##### Departures from Model to Be Studied by Residuals
+(1) The regression function is not linear.
+(2) The error terms do not have constant variance.
+(3) The error terms are not independent.
+(4) The model fits all but one or a few outlier observations.
+(5) The error terms are not normally distributed.
+(6) One or several important predictor variables have been omitted from the model.
+
+##### Diagnostics for Residuals
+(1) Plot of residuals against predictor variable
+(2) Plot of absolute or squared residuals against predictor variable. (3) Plot of residuals against fitted values.
+(4) Plot of residuals against time or other sequence.
+(5) Plots of residuals against omitted predictor variables.
+(6) Box plot of residuals.
+(7) Normal probability plot of residuals.  
+
+Lets use the Howell’s cranial data set.We can look at a bunch of residual diagnostics at once using the command below.
+```{r}
+#cran.data<-read.table(file.choose(),sep=",",header=T)
+cran.data<-read.table("/Users/markgrabowski/Documents/Academic/Classes Taught/LJMU Classes/2021/Spring/7107NATSCI - R Classes/Online R Classes/Class 5/Howells Subsample.csv",sep=",",header=T)
+plot(lm(cran.data$GOL~cran.data$NOL))
+```
+---
+These four plots are telling us about the fit of our model to the data. The first is residuals versus the fitted data, and we see definite patterns here where there should be none.  
+
+One thing this plot does not show us is the residuals versus the predictors. Lets do this:
+```{r}
+plot(lm(cran.data$GOL~cran.data$NOL)$resid ~ cran.data$NOL)
+```
+---
+What these plots are suggesting is that something is wrong with our model. It is most likely the fact that we have left populations or sex out of the model.  
+
+Now let’s run the regression:
+```{r}
+lm(GOL~BNL,data=cran.data)
+```
+Here we see the estimate of the intercept (74.600) and the slope (1.055). More results can be obtained with the summary command.
+```{r}
+summary(lm(GOL~BNL,data=cran.data))
+```
+The most important results here are labeled “Coefficients:”, and give you the estimates of the intercept and the slope (called “BNL”, it is always the name of the independent variable of interest), the standard errors, t values (the coefficient divided by the standard error), which get compared to a Student’s t distribution and give you the P values for each coefficient - labeled in the column:Pr(>|t|)  
+
+And remember, output can always be stored in objects such as:
+```{r}
+cran.data.reg <-lm(cran.data[,3]~cran.data[,2])
+```
+#### Multiple regression.
+Multiple regression is just as easy as simple linear regression in R. Let’s add the variable “Sex” to our linear equation, but include the interaction between BNL and Sex along with Sex and BNL as predictor variables (if we wanted just BNL and Sex without the interaction we would just use a +”).
+```{r}
+summary(lm(GOL~BNL*Sex,data=cran.data))
+```
+### MA and RMA.
+One of the best functions in R for regression analysis is in the package lmodel2. Once you get this and then load it onto our workspace, we are going to look at the function lmodel2().  
+Lets use the Howell’s data again. Check out the variables (i.e. column names) in this dataset.
+```{r}
+library(lmodel2)
+names(cran.data)
+```
+Lets look at the relationship between GOL and BNL using different forms of regression.
+```{r}
+out<-lmodel2(GOL~BNL,data=cran.data)
+out
+```
+Note that here ”SMA” and not ”RMA” is a standard/reduced major axis regression. What we see is that the lmodel2() function gives us the n, the r, r2, tests of whether the OLS slope is significantly different from zero, and the angle between the lines y x and x y. The table shows you the method used, the intercept, slope, angle between the regression line and abscissa, and the p-value for the test of the slope. It does not give you a p-value for the SMA (reduced major axis).  
+We can also plot each of these results individually.
+```{r}
+plot(out,method="OLS")
+
+```
+---
+Or overlay the OLS with the SMA regression lines using the function lines():
+```{r}
+plot(out,method="OLS")
+lines(out,method="SMA")
+
+```
+---
+Which lets us see the large differences in these two line fitting methods.  
+
+Before we may have noticed that there was no p-value for the RMA (SMA here) test. And how do we test if a slope is a certain value? Well it is not possible to test if RMA slopes = 0 because of statistical reasons, but we can test if slope =1.  
+
+Lets load the package ”smatr”, which lets us do this.  
+
+Lets test for isometry, where the slope is 1 but the data has to be logged?
+```{r}
+library(smatr)
+with(cran.data,slope.test(log(BNL),log(GOL),test.value=1,method="SMA",alpha=0.05))
+```
+Boom, test for isometry. And here we see that the slope is significantly greater than 1 with a 0.05% probability of Type I error.  
+
+Reading the help file for slope.test we can also test using OLS, MA, as well as RMA.
+
+---
+
+### Correlation and signficance.
+Looking at correlations between columns of data is really simple in R.
+```{r}
+cor(cran.data$GOL,cran.data$BNL)
+```
+But how do we test if that correlation is significant?
+```{r}
+cor.test(cran.data$GOL,cran.data$BNL)
+```
+
+#### Kendall’s Rank Coefficient.
+The non-parametric alternative to correlations is the KRC. We need the package ”Kendall” to run this function. After loading it:
+```{r}
+library(Kendall)
+Kendall(cran.data$GOL,cran.data$BNL)
+```
+
+---
+
+### Activity 1.
+Read in the iris data from last class. Find the intercepts and slopes for the OLS and the RMA fits of Sepal.length (dependent variable) on Sepal.width (independent variable) for the species I. versicolor (I. v ) and I. virginia (I. vg). Plot both of these in two separate windows. Test if the best estimate (i.e. the mean) of the OLS and RMA slopes for I.v is significantly different than I. vg.
+
+---

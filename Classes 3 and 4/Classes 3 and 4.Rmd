@@ -1,0 +1,276 @@
+---
+title: "Intro to R: Classes 3 and 4 - Exploring Datasets"
+author: "Dr Mark Grabowski"
+output: html_document
+---
+
+---
+
+### 1. Getting data into R.
+Now lets get some data in and start fooling with it. We will use the data set Sir Ronald Fisher used in coming up with a lot of classic statistical tests, the Iris Data set, which includes measurements on flowers for three different types of irises, and is a standard for starting multivariate stats analyses.
+Type:
+```{r}
+#iris.data<-read.csv(file.choose(),header=T)
+iris.data<-read.csv("/Users/markgrabowski/Documents/Academic/Classes Taught/LJMU Classes/2021/Spring/7107NATSCI - R Classes/Online R Classes/Classes 3 and 4/Data/Iris_Data_Set.csv",header=T)
+```
+Now find the file we will be using for this session and load it into R.
+
+Note that the file is saved in the ”.csv” format, which is probably the easiest way to get data into R, but you could do tab delimited also. If your data is in Excel you can save the files into these formats before pulling the data into R. You can also load a package designed to read in Excel files:
+```{r}
+#install.packages("readxl")
+#library(readxl)
+#theData <- read_excel("NAME OF FILE")
+```
+
+---
+
+Note that all missing values in R must be entered as NA - usually my workflow is getting the data ready for R in a spreadsheet program like Excel, during which I replace all the missing values with NA. If NA is missing, R will have a difficult time reading the data into the program. It may read in integer data as factors, or characters.
+
+Now type ”iris.data” and you can see the data. If you want to see only a portion of it (usually a good idea with large data sets), type
+
+```{r}
+iris.data[1:10,]
+```
+This displays only the first 10 rows of the data set and we can see the column headers. Note the format for the entries in the brackets is [row,column]. The 1:10 is the first 10 rows of the iris.data data set, and the ”,” means all columns. So if you were to type iris.data[,,] you would see the entire data set just like typing only iris.data.
+
+So, you can reference one variable in particular from a data set by typing iris.data[1,2], which gives you the integer at row 1 column 2 in iris.data.
+
+Lets look at the dimensions of the data frame using the dim() command. Note that for vectors, this command is length() as there is only one dimension.
+```{r}
+dim(iris.data)
+```
+Let’s get the names of the columns:
+```{r}
+names(iris.data)
+```
+
+Lets look at iris.data using the ls.str() command, which was discussed in the Bonus section of the previous class.
+```{r}
+ls.str(iris.data)
+```
+What we see is that iris.data is a data frame with four columns made up of integers, the data, and one column of species names, which is a column of factors with three levels, or types.
+
+If we want to know the breakdown of something like the number of individuals in each species we can use the table() function like so:
+```{r}
+table(iris.data$Species)
+```
+You can change the ”Species” part to the other names to see things like how many different measurements are in the column ”Sepal.length”.
+```{r}
+table(iris.data$Sepal.length)
+```
+Now lets look at one column of data individually. One way this is done is by using the ”$” to refer to the column of interest. Lets look at the data in the ”Petal.length” column:
+```{r}
+iris.data$Petal.length
+```
+Or
+```{r}
+iris.data["Petal.length"]
+```
+Or two at once, which is easiest to do by accessing the columns by their numbers rather than their names:
+```{r}
+iris.data[,2:3]
+```
+Or
+```{r}
+iris.data[c("Petal.length","Petal.width")]
+```
+Yup, exciting huh?
+
+Finally we can get data out of R using the write.table() command like so:
+```{r}
+write.table(iris.data,"iris.data.csv",sep=",",row.names=F)
+```
+This will write the same file as we read in, but usually you will have done some manipulation to the data. Go to the ”Misc” menu at the top of the screen and click on ”Get Working Directory” to determine where R saved the file. You can also set the directory to where ever you would like.
+
+---
+
+### ACTIVITY 1.
+Take columns 2 and 3 of the iris data set, add them together, and store in the variable x. Then take the sum of square root of the elements. Save this in y, and multiply by the variables Sepal.width. Display the output.
+
+---
+
+### Exploring your data.
+Now that we have a multivariate data set in R, lets play around. To calculate column means, we need to make sure we are looking at the columns with numeric values in them (2-5). To do this type:
+```{r}
+colMeans(iris.data[,2:5])
+```
+For standard deviations of each column, we will use the apply() function, which in this case applies another function to a data frame. In this case we want to do it by columns. The code is below:
+```{r}
+apply(iris.data[,2:5],2,sd)
+```
+
+Here we are applying the function sd (to calculate standard deviations) to the data frame iris.data over columns, which is denoted by the 2, over rows would be 1. You find this from the very helpful help file for the apply function, which you can access using apply. You need to do this because otherwise the sd() function does not know how to read the data (by columns or rows).
+
+---
+
+### Data Exploration - following Zuur et al. (2010).
+Lets run through some of the more common methods of data exploration to do before beginning the actual analysis following the data exploration setup of Zurr et al. (2010).
+
+---
+
+#### 1. Check for outliers in Y&X.
+One way to do this is to look at box plots.
+```{r}
+boxplot(iris.data[,2:5])
+```
+---
+This is pretty self-evident. The median is presented as the middle line, then the top and bottoms of the box are the 25% and 75% quartiles and the box contains half the observations. The lines, known as whiskers that extend out from the box show you 1.5 IQR or 1.5 times the distance between the upper and lower quartiles. Circles outside this range are outliers. This data set has three species of plants (found in the first column). We can also break it up so we are looking at the differences in one column, for example Petal.width by species. The tilda is used in equations in R to denote an = sign.
+```{r}
+boxplot(Petal.width~Species ,iris.data)
+```
+Another method of looking for outliers are Cleveland dotplots - they only work on each column individually, for reasons evident in a second:
+```{r}
+dotchart(iris.data$Petal.width)
+```
+What this is showing you is values of the variables on the X and the order of the individual entries in the data set on the Y - the bottom of the plot is row 1 and the top row 150. Cleveland dotplots are great for looking for patterns in data - which would violate the assumptions of various statistical tests such as regression analysis. They can also show you outliers - solitary values to the left or right. Here the data is ordered by species in our data set, so the pattern we are looking at is the result of differences between the species.
+
+#### 2. Homogeneity of variance.
+Homogeneity of variance is an assumption of an ANOVA and other statistical tests. One way to test this is the Bartlett test.
+```{r}
+bartlett.test(iris.data[,3],iris.data$Species)
+```
+This result is telling you that with a 0.05% probability of Type I error you can’t reject the null hypothesis of no differences between the variances.
+
+#### 3. Are the data normally distributed?
+A number of different statistical tests require the data be normally distributed (not regression though, which requires normality of the residuals)?
+```{r}
+shapiro.test(iris.data$Sepal.length)
+```
+If we are using a 0.05 p-value for rejection of the null hypothesis, this suggests that the data is not normal, though this is combining different species once again.  
+
+Splitting data into species requires you grab the rows of data which have a particular species name, in this case ”I. versicolor”. What this code says is if the entry in the species row is the species we want return the value in the third column to do a shapiro-wilk test on.
+```{r}
+shapiro.test(iris.data[iris.data$Species=="I.vg",3])
+```
+Given the p-value we cannot reject the null hypotheses, so the data appears normal within one species individually.  
+
+A better way to check for normality is looking at the data using a histogram. Let’s look at the second column from the iris.data data set:
+```{r}
+hist(iris.data$Sepal.width)
+```
+One thing that is important to mention is that most functions, even ones that produce graphical output also produce a lot of results. These are in the ”Value” section of the help file. Check out ?hist. These can be accessed if the output of the function is assigned to a variable rather than simply running the code. These values are returned as a list.
+```{r}
+test<-hist(iris.data$Sepal.width)
+test
+```
+To directly access single values from the list you use the same format we used for columns of data.
+```{r}
+test$counts
+```
+
+### 4. Are there a lot of zeros in the data?
+Zeros can complicate statistical analyses in major ways. You can check out presence of zeros using frequency plot, which shows how many observations there are at each value on the x axis.  
+
+Let’s look at the variable Sepal.width:
+```{r}
+plot(table(iris.data$Sepal.width))
+```
+#### 5. Is there collinearity among the covariates?
+Collinearity is the existence of correlation between the covariates (X variables) and can complicate statistical analysis such as ANOVAs and linear regression models. We will discuss it later as it is important for models with multiple X variables.  
+
+#### 6. What is the relationship between the Y and X variables?
+Pairplots - can show you a lot of information about relationships between variables.
+```{r}
+pairs(iris.data[,2:5])
+```
+
+```{r}
+table(iris.data$Sepal.width)
+```
+#### 7. Should we consider interactions between the X variables?
+This becomes important in multivariate stats. One easy way of looking at interactions between variables is using a coplot.
+```{r}
+coplot(Sepal.length~Sepal.width|Species,data=iris.data,rows=1)
+```
+Here we see that Sepal.length and Sepal.width are pretty strongly correlated in each of the species looked at here. Because of this, we should most likely include an interaction term in our model.  
+We can also look at the same thing but include a linear model (regression line) we do this by installing and running the Lattace package.
+```{r}
+#xyplot(Sepal.length~Sepal.width|Species,data=iris.data,type=c("p","r"))
+```
+Did you get an error there? That error means that the package has not been loaded. Lets figure out which one now.  
+Type in:
+```{r}
+?xyplot
+??xylot
+```
+So the package we want to load is "lattice." Go up to Tools-Install Packages and load it now. Now try that again:
+```{r}
+library(lattice)
+xyplot(Sepal.length~Sepal.width|Species,data=iris.data,type=c("p","r"))
+```
+These OLS slopes all resemble each other, which is good, and means that each species has a similar relationship between the two traits. If this changed we would have to use a more complicated mixed model.  
+
+#### 8. Are observations of the response variable independent?
+This gets into the regression models class.
+
+### ACTIVITY 2.
+Make a box plot with sepal length by species. What is the value of the outliers? Figure this out using R. Hint: check out the help file.
+
+### 2. Simple univariate statistics
+#### T-tests.
+T-tests are used to test a number of different kinds of hypotheses, such as testing whether the true population mean (parameter) is equal to a specified value given a sample distribution. Note that here we are focusing on all values contained in column 3 that are designated one species.  
+
+#### One sample t-test: Is the true population mean equal to a specified value (mu).
+```{r}
+t.test(iris.data[iris.data$Species=="I. set",3],mu=5)
+```
+#### Two-sample t-test.  
+Aare the population means of two populations equal given the samples?
+```{r}
+t.test(iris.data[iris.data$Species=="I. v",3],iris.data[iris.data$Species=="I. set",3])
+```
+#### Paired t-test.
+Do two sets of matched data or repeatedly taken data have the same mean?
+```{r}
+t.test(iris.data[iris.data$Species=="I. v",3],iris.data[iris.data$Species=="I. set",3],paired=T)
+```
+You can also do this indexing the data by the column names as follows (but I’ll keep using the column number (3) for brevity).
+```{r}
+t.test(iris.data[iris.data$Species=="I. v","Sepal.width"],iris.data[iris.data$Species=="I. set","Sepal.width"],paired=T)
+```
+#### Mann-Whitney U.
+Mann-Whitney U is a non-parametric test used for if one of two samples generally has larger values than the other. This test assumes independence between the samples. Mann-Whitney U: Does one sample have significantly larger values than the other?
+```{r}
+wilcox.test(iris.data[iris.data$Species=="I. set",3],iris.data[iris.data$Species=="I. v",3])
+```
+#### Wilcoxson Signed-rank test.
+Wilcoxson signed rank test is a non-parametric test used for testing if the population means differ based on non-independent samples (related, matched, repeated). Wilcoxson signed rank test: Do population means differ given non-independent samples?
+```{r}
+wilcox.test(iris.data[iris.data$Species=="I. set",3],iris.data[iris.data$Species=="I. v",3],paired=T)
+```
+#### Kolmogorov-Smirnov.
+The KS test is a non-parametric test that compares two sample distributions or one sample to a reference distribution, and is sensitive to both location and shape of probability distribution. The KS test: are the sample distributions significantly different from each other?
+```{r}
+ks.test(iris.data[iris.data$Species=="I. set",4],iris.data[iris.data$Species=="I. v",4])
+```
+#### ANOVA.
+ANOVA is a parametric test commonly used for testing if the means of three or more samples with different treatments (categorical classification variables) are equal. It assumes independent samples. In the iris data set, we will use Species as our classification variable, and we will test if one of the species means for Sepal.length is significantly different from the others.
+
+Hypotheses:
+H0: u1=u2=u3
+H1: At least one of the means is not equal.
+
+#### One-way ANOVA.
+One categorical variable and one continuous dependent variable.
+```{r}
+aov(Sepal.length~Species ,data=iris.data)
+```
+This result gives you the among and within sums of squares, which can be useful, but to get the main results:
+```{r}
+summary(aov(Sepal.length~Species ,data=iris.data))
+```
+Looking at the p value we see that there is an effect of the Species categorical variable on the means - in other words, at least one Sepal.length mean is different between the three species.
+
+#### Two-way ANOVAs.
+Use more than one categorical variable and can be added to the equation with the + symbol.
+
+#### Kruskal-Wallace.
+The KW test is an extension of the Mann-Whitney U test for comparing three or more samples - a non-parametric test for determining whether independent samples origi- nate from the same distribution. Equivalent to a parametric one-way ANOVA. The KW test: Do three or more samples come from the same distribution? The code below breaks the Sepal.width column down to compare whether Sepal.width differs by species.
+```{r}
+kruskal.test(Sepal.width~Species ,data=iris.data)
+```
+### ACTIVITY 3.
+Perform a Mann-Whitney U between the second and third species in the data set and the variable Petal.width.
+
+---
+

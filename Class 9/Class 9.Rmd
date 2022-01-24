@@ -1,0 +1,124 @@
+---
+title: "Intro to R: Class 9 - DFA and Writing your own Functions"
+author: "Dr Mark Grabowski"
+output: html_document
+---
+
+---
+
+### Discriminant Function Analyses
+DFA is a technique for predicting a categorical dependent variable based on a set of independent variables (data). You can think of it as the opposite of a ANOVA, where the categorical variables are the independent variables and the data is the dependent variable.  
+
+I used DFA during my initial processing step for my dissertation data as there were a number of pelves from chimps and gorillas that were not assigned sexes. Using pelves of known sex from each species I used DFA to build discriminant functions that were then used to predict the unknown sexes with some probability.  
+
+We will use a portion of the Howell’s data set to determine sex of some unknown skulls. These all come from the same population - the Norse population.
+```{r}
+norse.skulls<-read.table("/Users/markgrabowski/Documents/Academic/Classes Taught/LJMU Classes/2021/Spring/7107NATSCI - R Classes/Online R Classes/Class 9/Data/Howells Subsample Norse DFA.csv",sep=",", header=T)
+head(norse.skulls)
+head(norse.skulls)
+```
+There are a number of skulls, individuals 50−61 which have NA for sex.   
+
+Let’s do this the correct way − non−permanently removing the NAs from the data before we make the LD functions (R should ignore these individuals as they are marked NA, but in case they are not, this is how to do it. Load the package MASS into your workspace before you run the lea code.
+```{r}
+library(MASS)
+fit<-lda(Sex~GOL+NOL+BNL,data=norse.skulls[-c(50:61),],CV=T)
+fit$class
+```
+
+There are a number of random males and females in the long stretches of males and females. This happens for individuals that are borderline, and is expected.
+```{r}
+head(fit$post)
+```
+
+Now lets make an LD function and use this to predict the unknown sex in individuals 50−61. We have to remove the CV=T part of the code, which gives us the posterior probabilities of the original data set as R doesn’t like to have that info in the predict function (see below).
+```{r}
+fit<-lda(Sex~GOL+NOL+BNL,data=norse.skulls[-c(50:61),])
+predict(fit,norse.skulls[c(50:61),])
+```
+
+---
+
+### Functions
+Functions are not hard to write, but you have to know what you are doing. Let’s write a simple
+one - open up a new blank window in R and let’s begin.  
+```{r}
+test.fxn<-function(){}
+```
+All functions begin with this line - if you want to send your function a variable for the function to use you put the variable in the parenthesis such as function(height). This would also need to be sent in the R console window.
+
+Now lets make a loop to print ”Aye” 10 times. This is what the code below does, counting up using the variable i - if we were to look at i we would see this as shown in the next function.
+
+```{r}
+for (i in 1:10){ print("Aye?")
+  }
+
+```
+Now lets join together our Aye loop with our function declaration:
+```{r}
+test.fxn<-function(word){
+  for (i in 1:10){
+    print(paste("Aye ",i," ",word)) #This function pastes together the word ”Aye” and the variable that is counting up.
+  }
+}
+
+```
+Now lets run the function we wrote - we just loaded it in our memory
+```{r}
+test.fxn("yo")
+```
+
+---
+
+### Resampling
+Resampling allows you do do things like estimate the precision of statistics through jackknifing or bootstrapping, hypothesis testing, and validating models through using subsets of the data set (cross validation). Resampling can be used for non-parametric data or impossible or difficult parametric inferences. Below is an example of bootstrapping to test for significant differences between two means. It give you a p-value which you can use to compare to your alpha. In R resampling is mostly based around the sample() function.  
+
+Sample takes a data set, usually a vector of numbers, and pulls a random sample of a set size from this data set. You can set it to do this with replacement or without. The below code grabs a random sample of size = 5 from a data set that is the numbers 1−100, with replacement .
+```{r}
+sample(1:100,5,replace=T)
+```
+The sample function forms the basis of the code you see below, which test for significant differ- ences between two means by bootstrapping. I wrote this code, but now you can also just use the R package Boot. Lets install it now and run something quick. First we will write a function
+```{r}
+bootstrapping.mean.diff.test<-function(data1,data2){
+  it<-1000 #it is the number of iterations
+  test<-1:it*0 # this sets up a dummy variable called test with the length equal to the number of iterations and of all zeros
+  store.fake.diff.means<-NULL #this is another dummy variable for the distribution of the difference between the two fake (resampled) means.
+  real.mean.1<-mean(data1)
+  real.mean.2<-mean(data2) #these two lines calculate the means for the two columns (the real data)
+  diff.means<-real.mean.1-real.mean.2#this is the difference between the means of the real data
+  for (i in 1:it){#this is a loop from 1−1000 which is the resampling procedure
+    fake.data.1<-sample(data1,length(data1),replace=T)
+    fake.data.2<-sample(data1,length(data1),replace=T)#these two lines sample from the original   data with replacement of a length of the original data
+  fake.mean.1<-mean(fake.data.1)
+  fake.mean.2<-mean(fake.data.2) #these two lines calculate the new means on the resampled data
+  fake.diff.means<-fake.mean.1-fake.mean.2 #this step calculates the difference between the two resampled means
+  store.fake.diff.means<-c(store.fake.diff.means,fake.diff.means) #this stores the new resampled difference into our dummy variable by adding to the values already there and then the loop is ready to repeat.
+  }
+  store.fake.diff.means<-store.fake.diff.means [order(store.fake.diff.means)]
+#this step orders the values in our resampled distribution
+  if(diff.means <=mean(store.fake.diff.means)){ test[store.fake.diff.means <=diff.means]<-1} #in this and the following step we are comparing the true difference between means to the mean of the resampled distribution . if the true mean is less (above) , we determine how many of the resampled means are less than the true mean − taking the mean of this value gives the p−value for the statistic. the opposite procedure is below
+  if(diff.means >mean(store.fake.diff.means)){test[store.fake.diff.means >=diff.means]<-1}
+  p.value<-mean(test)
+  return(paste("p-value",p.value))#this step returns the p. value
+  }
+```
+Lets send the program the second and third column of the iris data. Looking at these columns we can see that the two sets of values are pretty different, but lets figure out if they are significantly different.
+```{r}
+
+iris.data<-read.csv("/Users/markgrabowski/Documents/Academic/Classes Taught/LJMU Classes/2021/Spring/7107NATSCI - R Classes/Online R Classes/Classes 3 and 4/Data/Iris_Data_Set.csv",header=T)
+
+bootstrapping.mean.diff.test(iris.data[,2],iris.data[,3])
+```
+What did you get?
+
+Awesome. Try it with the second column as the first and second data set.
+
+---
+
+### ACTIVITY 1. 
+Write a program (from scratch) that prints out the message ”I am now on my path to Runderstanding‘” 1000 times, with each replication adding the current loop number to the end of that sentence (plus a space between the line and the number).
+
+### ACTIVITY 2.
+Write a function, MeanBoot(), that estimates the sampling error on a sample mean by bootstrapping. Have its arguments be a vector, x, and nreps, and have it return the standard error of the mean of x.
+
+---

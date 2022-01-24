@@ -1,0 +1,352 @@
+---
+title: "Intro to R: Classes 1 and 2 - Getting to know R"
+author: "Dr Mark Grabowski"
+output: html_document
+---
+
+---
+
+Welcome to R! R is a complex but rewarding statistical computer language that can do almost anything you can imagine - you just have to know how. It has a steep learning curve, but if you climb it you will be greatly rewarded.
+
+---
+
+## RStudio
+First, we are going to be running R within the RStudio, an integrated development environment for R. It has the console, can show the workspace, files, plotting windows, etc. You can also use R as I learned to use it, just using the R console, but Rstudio has a number of nice functions, such as Markdown, which I used to make these web pages.
+
+---
+
+### Walkthrough of RStudio.
+
+There are 12 pull-down menus at the top of your console. They are standard format mostly, but the only ones I regularly use are of course "File" to open and close things, “Session” and “Tools.” I’ll turn to these in a minute, but one other point you may find useful, especially at the beginning of learning R is File-Save, which lets you save the console as a text file - i.e. everything you typed in since you started the session and the output R responded with. I’d recommend you all saving what we do today at the end of the session so you can look at what we did later.
+
+“Session” has a number of options under it, but I think the most useful is “Save Workspace File” which lets you save the environment you are currently working in with all variables, packages, and functions. Also of note is “Clear Workspace” which clears out the environment. This last can be very useful when working on large projects and you want to start afresh.
+
+“Tools” lets you install and manage new packages into R. Lets look at the Installer first. If you have an internet connection click on “Install Packages." This will show you all the packages you can download to enhance R’s functionality. The Manager menu shows you which packages are loaded in the present environment. Many are loaded automatically. Let’s type in "MASS" as we will use those functions a lot today. You should note that whenever you download a new package via the installer, you then need to load the package into the environment with the manager.
+
+On the left are a couple of tabs - Environment, History, Connections, and Tutorial. Environment shows you the current content of your workspace - this is the working variables and functions (data) that you can access through the console. History shows you the commands you have entered so far in the session. Connections and tutorial I never use.
+
+At the bottom left is tables for Files, Plots, Packages, Help, and Viewer. Files shows you the files in the current directory, and is one way of opening R scripts, etc. Plots is where your plots will show up when we make them. Packages shows you the packages in your systen library (that you downloaded using the Tools-Install Packages link above). A check mark means it is loaded. Help is where you can get help on different functions or packages that are loaded. You can also type in ?NAME OF FUNCTION in the console - see below.
+
+---
+
+### Reading the help menu.
+Most functions in R have their own help files. These can be very difficult to read, especially to the beginner, as they are written in “R-speak.” Let’s look at one. Type in:
+
+
+```{r}
+?plot
+```
+
+On the right (in the Help tab) we see the help menu for the plot function, which you will be using today for plotting your data. At the top we see the name of the function, plot, then within the curly-brackets the name of the package that this function comes from (graphics). As mentioned above, this package is one of the ones R loads automatically when it starts up. The “Description” tells you what the function does, including other options. “Usage” shows you how to enter the function in the console, including the variables that go into your line of code. “Arguments” shows you what the variables in “Usage” stand for. Here we what “x” and “y” are, and “...” which shows you the other optional arguments which the plot function will use to do more fancy plots. For example “type” allows you to set what kind of points are on the plot. “Details” gives you more info on the function that we will ignore here. “See also” shows you the functions that are related to the plot function. Most importantly is “Examples,” which shows you the proper format to use the plot function. This code is usually self-contained - you can run this code in your R console to see how a function works before running it on your own data.
+
+---
+
+### R programming format.
+First thing, remember that if you want to rerun any code you entered and ran during a session you just need to hit the up key, which will let you scroll through the history.  
+Vectors, data frames, lists, etc. are called data structures in R, which you assign names to. Let’s start with something very basic - assigning a value to an object, in this case a numeric vector of length 1.
+This is done as so:
+```{r}
+x <-15
+```
+
+In this case the "<-" is the assignment operator, and should be used preferentially to “=,” which will be used in logical vectors as shown below. This code assigns the value of 15 to the vector x until you quit R, clear the workspace, or assign a new value to the object. Now lets do this again for a different value and a different object.
+```{r}
+y <-14
+```
+Now we can do (relatively) fun things with the variables:
+```{r}
+x+y
+```
+
+```{r}
+x/y
+```
+You should note that this command does not store these results anywhere - it just prints them. To save the results you need to store them in another object such as:
+```{r}
+z <-x+y
+```
+Now type in “z” and you can see the value stored in the data structure.  
+You can also assign a number of different numbers into a numeric vector. Here we are using the function c() or the combine function - if you get into R it will be one of your best friends.
+```{r}
+y <-c(14,15,12)
+```
+Operations to vectors can be performed element by element, such as
+```{r}
+y
+```
+```{r}
+y*5
+```
+Or not, depending on what the function is doing:
+```{r}
+sum(y)
+```
+You can assign different kinds of values to objects such as characters:
+```{r}
+x<-"A"
+x
+```
+
+You need quotes to make this work because otherwise it will look for the object A rather than assigning the character A.
+Text strings:
+```{r}
+x <-"Hello"
+x
+```
+And vectors of text strings
+```{r}
+x <-c("Hello","How","Are","You")
+x
+```
+
+Always remember that objects in R are case sensitive, so:
+"Big.boy"
+is accessing a different set of values than:
+"big.boy"
+Also note that periods, underscores, and other characters are acceptable as object or function names.
+
+---
+
+### ACTIVITY 1.
+Store the value 25 in a variable named x, store 34 in y, and 46 in z. What is the product of these three variables? Store this last value in x.
+
+---
+
+### Functions.
+
+Functions take data (here called arguments) and do something with them. Most of the common ones are listed on that short ref card I sent out. They are built-in with R, found in R packages, or user-written (the most fun). The format is [name of the function] followed by open parenthesis “(”, followed by the arguments, followed by closed parenthesis “)”.
+For example:
+```{r}
+sqrt (25)
+```
+
+You can also use variables that you create in functions:
+```{r}
+x<-25
+sqrt(x)
+```
+
+Going back to our y vector, functions like sum() or mean() will be computed using all elements in a vector:
+```{r}
+y
+sum(y)
+mean(y)
+var(y)
+sd(y)
+range(y)
+median(y)
+quantile(y)
+```
+
+What you will notice at this point is that typing the function name and the first parenthesis shows you a brief guide to what data R wants you to give to the function on the bottom of the screen.
+Standard mathematical functions work in R as well.
+```{r}
+4^2
+4^3
+4^(1/2)
+```
+Other functions allow you to work with data in R rather than do statistical things to the data. For example, cbind() and rbind() combine vectors or data sets of the same dimensions (same number of rows for cbind(), same number columns for rbind())
+```{r}
+x<-c(14,15,16,17)
+y<-c(12,42,100,10)
+cbind(x,y)
+rbind(x,y)
+```
+
+---
+
+### ACTIVITY 2.
+Store the values ”2,4,2,5,6,723,23” in z. Find the sum of squares of this sequence and store in a variable called ”your.mother”. Hint: look at the short reference card for the sum() function.
+
+---
+
+### Index vectors.
+Subsets of vector elements or other objects (matrices, data frames, etc.) can be selected in a number of ways.
+1. Probably the most common is specifying the number of rows and columns - though for a vector there is only one dimension. We will look at subletting two-dimensional data frames below after we read in our data set. In terms of vectors:
+```{r}
+y<-c(14,15,12)
+y
+y[1:2]
+```
+You can also grab individual elements of objects. The next command sets up the vector x and
+then grabs entries 2 and 1 in that order.
+```{r}
+x <- c(4,8,30,52)
+x[c(2,1)]
+```
+You can take a subset of the data that meet conditions like > some value, etc. using the subset function.
+```{r}
+subset(x,x>8)
+```
+2. Another common method of setting subsets of vectors using a logical index vector. This tests the relationship between values of the elements in the vector and some value, such as:
+```{r}
+y<-c(14,15,12)
+y[y>=14]
+```
+3. You can also exclude elements of the vector such as:
+```{r}
+y[-c(1,2)]
+```
+Here we are removing the first two elements of the vector and then displaying the remaining elements.  
+4. The index can also be the names of the columns that you want in the subset. First we will give the columns names as so:
+```{r}
+names(y)<-c("a","b","c")
+y
+```
+Then we grab a subset of the vector using the column names.
+```{r}
+y[c("a","b")]
+```
+Fun huh? In addition outputs can all be saved in new objects.  
+
+You access the data slightly differently when it is more than a one dimensional vector. Here we are using the cbind command, which binds together two columns of data. Columns go vertically (think of the Romans), rows go horizontally. 2D indices always go [row,column]. To bind two rows of data together use the rbind command.
+```{r}
+x
+y
+z<-cbind(x,y)
+z
+```
+Lets access the element in the upper left corner. This is the element in the first column, first row.
+```{r}
+z[1,1]
+```
+If we want the first column, the ”,” symbol means all the elements in that row or column. So
+```{r}
+z[,1]
+```
+Gives you all the elements in column 1. The first two columns:
+```{r}
+z[,1:2]
+```
+Now we made the object z, which is a combination of two vectors. We can access the data in z in the traditional way we have been talking about so far:
+```{r}
+z[1,1]
+```
+
+Which gives us the element in the first row and column of z. But we can also use the column names to get at the data as well. This requires we change the object z into a new type, a data frame.
+```{r}
+z<-as.data.frame(z)
+```
+Now we can access data directly using the column names. This gives us the first column named x.
+```{r}
+z$x
+```
+
+We can also access elements of the column x. 
+```{r}
+z$x[1]
+```
+
+There are many ways to do the same thing in R, it is a matter of choosing what feels best to you. It is all about feeling here. One thing is I highly recommend against using the attach() function. If you don’t know about it, don’t learn about it, but this has probably caused more problems with data analysis than any other function.
+
+---
+
+### ACTIVITY 3. 
+Create a vector called “x” with the elements “1,3,4,7,12,14,32,64”. Call the elements of this vector ”a,b,c,d,e,f,g,h”. What is the product of element f and element g? Figure this out using indexing. Which elements are greater than 8? Also use indexing.
+
+---
+
+### Data Structures in R.
+R has a number of different types of data - character, numeric, integer, complex, and logical. These are contained in various types of Data structures, which can be assigned to objects (e.g. X). Data structures can differ in dimensionality, and also about whether they contain one or more types of data (i.e. mixing characters and integers). One way to get information about the structure of an R object is to use the str function.  
+
+Why do we care about different data structures? Well one important reason is the different functions we want to run, for example sum, only work with certain types of data.  
+
+1. Numeric Vectors: Ordered collection of numbers of length 1 to n.
+```{r}
+x<-15
+x
+str(x)
+```
+2. Logical vectors: You can also use logical operators such as < or == in conjunction with other objects or place the logical quantities TRUE, FALSE, and NA in vectors themselves. Below we are testing if any of the values in a vector are certain values.
+```{r}
+y<-c(14,15,12)
+y==14
+y==2
+x<-y==2
+x
+```
+The x vector is a logical vector.  
+3. Character vectors: text strings, letters, etc. are inputted using quotes (see above).
+```{r}
+test<-c("A","B","C")
+test
+str(test)
+```
+4. Factors: Categorical variables that automatically are assigned integer values and can be ordered.
+```{r}
+test<-as.factor(c("Blue","Red","White"))
+test
+str(test)
+```
+5. Lists: Ordered objects of both numerical and categorical data
+```{r}
+test <- list(name="Fred", mynumbers=5, mymatrix=2, age=5.3) > str(test)
+str(test)
+names(test)
+test
+```
+
+Lists can be accessed just like arrays:
+```{r}
+test[2]
+```
+6. Matrices: two dimensional vectors with one type of data.
+```{r}
+matrix(1:10 ,2 ,5)
+#This puts digits 1-10 into 2 rows and 5 columns of data
+```
+7. Arrays: n dimensional vectors - e.g. 3D vectors which all have data of the same type.  
+
+8. Data frames: can be both numerical and categorical (factors) data - we will be reading data into a data frame in the activities below. This is the usual type that automatically results when importing data. Lets make a data frame now.
+```{r}
+matrix(1:10 ,2 ,5)
+cbind(c("species1","species2"),matrix(1:10,2,5))
+```
+What did I do above? Why might this data set be useful?
+```{r}
+as.data.frame(cbind(c("species1","species2"),matrix(1:10,2,5)))
+```
+
+There you go, we have made a data frame by joining a matrix, which has numeric data in it, with a vector with character data in it.
+
+---
+
+### ACTIVITY 4!
+Create a numeric vector called ”n” that contains the numbers ”2,3,5,3,5,6,7,8,12,33,8”. Divide each element of this vector by 2 and store that in ”y”. What is the variance of this new vector (use the short ref card)? What is the product of the elements in this new vector? Visualize the distribution of ”n”. (Hint: look at the short ref card - making a histogram).
+
+---
+
+### BONUS SECTION.
+Other fun things to know about that I use a lot. "ls" gives you the current objects in the workspace.
+
+"ls.str" gives you details on all the objects in the workspace.
+"rm(OBJECT NAME)" removes an object from the workspace
+
+R has a number of built in features that make things easier (if you know them). For example
+typing in 1:20 gives the integers between 1 and 20, which can be stored in an object if needed. 
+rep() gives you a vector of repeated elements that you specify. For example:
+```{r}
+rep (25 ,3)
+```
+
+The paste() function combines arguments into character strings, which can be very useful. For example:
+```{r}
+paste("X",sep="" ,1:10)
+```
+
+Finally, you can merge data files by certain conditions. I often use this for combining two data sets for different element measurements (like tibia and femur) by individual.
+```{r}
+z <- data.frame(ID=c("NMNH9","NMNH13","NMNH12","NMNH3"))
+q <- data.frame(ID=c("NMNH12","NMNH13","NMNH14","NMNH5"))
+merge(z,q,by="ID")
+```
+
+---
+
+At the end of class today, clear your workspace. Do this using the command:
+```{r}
+rm(list=ls())
+```
+
+---
+

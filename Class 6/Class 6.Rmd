@@ -1,0 +1,153 @@
+---
+title: "Intro to R: Class 6"
+author: "Dr Mark Grabowski"
+output: html_document
+---
+
+---
+
+### 1. Plotting data with the base graphic commands
+
+Let’s start off with only a couple of data points. Lets say this is the relationship between mph
+and mass for 5 babies crawling speed.
+
+```{r}
+mph <- c(1, 3, 6, 4, 9)
+mass <- c(2,3, 16, 18, 100) 
+mph
+mass
+cbind(mph,mass)
+xy<-cbind(mph,mass)
+```
+
+Now let’s plot the data.
+```{r}
+plot(xy)
+```
+We can see that there is some kind of relationship between these data points, though not necessarily a tight one. And we have really too few data points to look at a relationship in an reliable way.  
+
+First lets fit a OLS regression line through the data then look at how this regression line correlates with our regression statistical output.
+```{r}
+#lm.xy<-lm(mass~mph,data=xy)
+```
+If you run the code above you get this:  
+Error in model.frame.default(formula = mass ~ mph, data = xy, drop.unused.levels = TRUE) : 'data' must be a data.frame, not a matrix or an array  
+
+Why didn’t this work? Check out the help.  
+
+You can see that the type of object the lm() function requires is a data frame. We can coerce xy into a data frame using the command as.data.frame().  
+Lets do this, creating the lm.xy object to hold the output of the regression and then lets add the line to the plot. This is done using the abline() function.  
+Note below that R allows for functions to be nested - we are making xy a data frame, then using this new data frame as data for our regression function.
+```{r}
+plot(xy) #Plots the data
+lm.xy<-lm(mass~mph,data=as.data.frame(xy)) #Calculates the regression and stores it
+abline(lm.xy) #Plots the regresssion line
+```
+Let’s look at the statistics of a simple linear model fit of y by x.
+```{r}
+summary(lm.xy)
+```
+What we can see, which agrees with what we see on the plot is that the line fit is ok, the adjusted R2 is fairly high but not too high here. We want to use the adjusted R2 because the non-adjusted may be biased by smaller samples (or actual any sample smaller than the population), which the adjusted R2 attempts to account for.  
+
+Now lets figure out which points may be outliers here. The function identify() gives us the row numbers of the points. You need to click on the plot to make the numbers appear. Position the mouse pointer next to but not directly on top of the point and click. If you want to exit identify before you click on all points hit the esc key.
+
+```{r}
+#quartz()
+plot(xy) #Plots the data
+lm.xy<-lm(mass~mph,data=as.data.frame(xy)) #Calculates the regression and stores it
+abline(lm.xy) #Plots the regresssion line
+identify(xy)
+```
+Now lets draw a line between the points. We can do this in our initial plotting step (look at the help for plot), or add them after. To do it after we use the lines() function. There are a few functions, like lines() and points() that write on graphs after they are produced. Also note that if we had another regression output (intercept and slope) we could use the abline command to plot the new regression lines.
+```{r}
+plot(xy) #Plots the data
+lines(xy)
+```
+Now lets make a plot with the different types of symbols. Let’s pretend the first three babies are chimps and the other two are modern humans. This takes a bit more code, but once you figure this out you will be able to make plots with all kinds of symbols and colors. R = complicated but extremely flexible. This is done using the pch parameter within the plot command, but this requires that the different babies be coded as matching particular symbols. Lets use symbols one and two.
+
+First lets duplicate out data set to save a pristine copy. Then we will make a dummy column and bind it to xy. Then let’s name this column ”species” and input species data for this.
+```{r}
+xy2<-xy
+xy2<-cbind(xy2,1)
+xy2<-as.data.frame(xy2)
+xy2[1:3,3]<-"Pan troglodytes"
+xy2[4:5,3]<-"Homo sapiens"
+names(xy2)[3]<-"species"
+xy2
+```
+Awesome. But now we need to make a dummy column that has the pch code we want in it - this will be used by the plot function to make the different species have different symbols. Let’s do this via indexing. First let’s make a dummy column for the codes and then put them in.
+```{r}
+xy2<-cbind(xy2,1) #Bind a column of 1s to xy2 data set
+```
+Let’s get the chimps and assign the code 1 in the new column. Then
+we will do the same for humans but use the code 2.
+```{r}
+xy2[xy2$species=="Pan troglodytes",4]<-1
+xy2[xy2$species=="Homo sapiens",4]<-2
+names(xy2)[4]<-"code" #Name this column "code"
+```
+Now let’s make the plot including the pch command.
+```{r}
+plot(mass~mph, data=xy2,pch=code)
+```
+We can also color code the species, using the col parameter within the plot function. There are too many colors to give the code below but you can find them online at http://research.stowers- institute.org/efg/R/Color/Chart/:
+```{r}
+plot(mass~mph, data=xy2,col=code)
+```
+Now lets work on tweaking the plot. Checking out the help file we can see that there are options for labeling the axis, the title of the plot, the type of plot we are making, and . . . , which is a ton of different options all contained under the heading ”graphical parameters.” Lets redraw our colored plot but add an x and y axis name, and a title.
+```{r}
+plot(mass~mph, data=xy2,col=code,xlab="Crawling Speed (mph)",ylab="Mass (g)",main="Baby Mass to Speed Performance")
+```
+
+Let’s look at the graphical parameters now. These are all under the par() function. Most of these can be used within the plot function or set separately for a session of R. Lets set the x and y axis to new limits. R automatically chooses x and y limits that it feels best fit your data, but if you don’t think so you can set them with the xlim and ylim par values.
+```{r}
+plot(mass~mph, data=xy2,col=code,xlab="Crawling Speed (mph)",ylab="Mass (g)",main="Baby Mass to Speed Performance",xlim=c(0,10),ylim=c(0,120))
+```
+
+Let’s add a legend matching the colors on the plot to particular babies. You can place the legend in different places by looking at the help.
+```{r}
+plot(mass~mph, data=xy2,col=code,xlab="Crawling Speed (mph)",ylab="Mass (g)",main="Baby Mass to Speed Performance",xlim=c(0,10),ylim=c(0,120))
+
+legend("topleft",legend=unique(xy2$species),fill=unique(xy2$code))
+```
+Basically this puts a legend at the top left, we are using the names included in the xy2 Species column, but asw eonly color codes but again we only want the unique (i.e. 1 and 2) ones of these.  
+
+There are many possibilities from here, for example italicizing the text in the legend, on changing the font or font size. I’ll leave you to explore these yourselves. HINT: Use google or the mailing list at: http://tolstoy.newcastle.edu.au/R/
+
+### ACTIVITY 1.
+Read in the Howell’s data set. Make a plot of GOL (y variable) vs. BNL (x variable) and color code this by population. Now do this by sex. What do you see? 
+
+#### 2. Working with ggplot2 to plot data
+Basic graphics included with the base R installation can pretty much do most of your plotting requirements, but do not make things geasy for you - I’ve spent days making plots look good, and spending a ton of time figuring out how to fix little issues. I highly recommend using the package ggplot2 for your plotting needs, or at least becoming familiar with it. I’ll show you a few things below, but ggplot2 is a lot more flexible and can pretty much do anything you want. Explore it more yourself.  
+
+First install and load ggplot2. How do we do this? Figure it out.  
+
+Then read in the Howells dataset and create a histogram of trait 1 (GOL) first using the base graphics.
+```{r}
+library(ggplot2)
+cran.data<-read.csv("/Users/markgrabowski/Documents/Academic/Classes Taught/LJMU Classes/2021/Spring/7107NATSCI - R Classes/Online R Classes/Class 6/Data/Howells Subsample.csv",header=TRUE)
+hist(cran.data$GOL)
+```
+
+Now lets do it in ggplot2 - the data set always comes first, then we can define what variable will be on the x axis.
+```{r}
+ggplot(cran.data,aes(x=GOL))+geom_histogram()
+```
+Lets do a linear regression plot
+```{r}
+ggplot(cran.data,aes(x=GOL, y=NOL))+geom_point(shape=1)
+```
+Nice! Now ggplot2 allows you to save the output of one line of ggplot to build on it before displaying the plot. Lets do that now. p1 will be the object we save the output in each time.
+
+The line below makes the plot, and makes symbols for the points by population. It also makes a legend for the populations by default .
+```{r}
+p1<-ggplot(cran.data,aes(x=GOL, y=NOL)) 
+p1<-p1+geom_point(size=3,aes(shape=as.factor(Population))) #This code makes different shapes for different populations.
+p1+geom_abline(intercept=, slope = , linetype=1)  #This code adds a regression line
+
+```
+---
+Can you make the points smaller? How do you do this? Try it.
+
+---
+
